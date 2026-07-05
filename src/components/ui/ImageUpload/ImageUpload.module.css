@@ -1,0 +1,155 @@
+/* src/components/ui/ImageUpload/ImageUpload.module.css */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* ── Preview grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-3);
+}
+
+.previewItem {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.previewImg {
+  object-fit: cover;
+}
+
+.removeBtn {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background-color: rgba(20, 8, 12, 0.7);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  transition: background-color var(--transition-fast);
+  z-index: var(--z-above);
+}
+
+.removeBtn:hover {
+  background-color: var(--color-primary);
+}
+
+/* ── Uploading shimmer ── */
+.uploading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border)  50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.uploadingLabel {
+  position: relative;
+  z-index: var(--z-above);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* ── Drop zone ── */
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+  background-color: var(--color-offwhite);
+  text-align: center;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+  outline: none;
+}
+
+.dragging {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+}
+
+.uploadIcon {
+  font-size: 2rem;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.dropzone:hover .uploadIcon,
+.dragging .uploadIcon {
+  color: var(--color-primary);
+}
+
+.dropText {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.browse {
+  color: var(--color-primary);
+  font-weight: var(--font-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dropHint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}
+
+.hiddenInput {
+  display: none;
+}

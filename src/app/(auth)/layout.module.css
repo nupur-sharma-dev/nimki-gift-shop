@@ -1,0 +1,43 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-white);
+}
+
+.left {
+  flex: 0 0 55%;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--space-8);
+  background-color: var(--color-white);
+  overflow-y: auto;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .left {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .right {
+    padding: var(--space-8) var(--space-5);
+    align-items: flex-start;
+    padding-top: var(--space-12);
+  }
+}
