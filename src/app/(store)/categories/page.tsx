@@ -1,26 +1,142 @@
-import { getAllCategoriesWithCounts } from "@/services/product.service";
-import CategoryCard from "@/components/store/CategoryCard/CategoryCard";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import {
+  getCategoryBySlug,
+  getProducts,
+  getAllCategoriesWithCounts,
+} from "@/services/product.service";
+import { buildMetadata, buildBreadcrumbJsonLd } from "@/lib/seo";
+import ProductGrid from "@/components/store/ProductGrid/ProductGrid";
+import FilterSidebar from "@/components/store/FilterSidebar/FilterSidebar";
+import SortDropdown from "@/components/store/SortDropdown/SortDropdown";
+import Pagination from "@/components/store/Pagination/Pagination";
+import EmptyState from "@/components/store/EmptyState/EmptyState";
+import { PAGINATION, ROUTES, APP_NAME } from "@/constants";
+import type { SortOption } from "@/types";
 import styles from "./page.module.css";
 
-export default async function CategoriesPage() {
-  const categories = await getAllCategoriesWithCounts();
+interface CategoryPageProps {
+  params: {
+    slug: string;
+  };
+  searchParams: {
+    minPrice?: string;
+    maxPrice?: string;
+    sort?: string;
+    page?: string;
+  };
+}
+
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+  const category = await getCategoryBySlug(params.slug);
+  if (!category) return {};
+
+  return buildMetadata({
+    title: category.name,
+    description:
+      category.description ??
+      `Shop handmade ${category.name} at ${APP_NAME} — crafted with love in Nepal.`,
+    path: ROUTES.CATEGORY(category.slug),
+    image: category.image,
+  });
+}
+
+export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
+  const category = await getCategoryBySlug(params.slug);
+
+  if (!category || !category.isActive) {
+    notFound();
+  }
+
+  const page = Math.max(1, parseInt(searchParams.page || "1", 10));
+  const limit = PAGINATION.DEFAULT_LIMIT;
+  const sort = (searchParams.sort || "newest") as SortOption;
+
+  const filters = {
+    categoryId: category.id,
+    minPrice: searchParams.minPrice ? parseInt(searchParams.minPrice, 10) : undefined,
+    maxPrice: searchParams.maxPrice ? parseInt(searchParams.maxPrice, 10) : undefined,
+  };
+
+  const allCategories = await getAllCategoriesWithCounts();
+  const { data: products, meta } = await getProducts({ filters, sort, page, limit });
+
+  const basePath = ROUTES.CATEGORY(category.slug);
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", path: ROUTES.HOME },
+    { name: "Categories", path: ROUTES.CATEGORIES },
+    { name: category.name, path: basePath },
+  ]);
 
   return (
     <div className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container">
+        <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
+          <ol>
+            <li>
+              <a href={ROUTES.HOME}>Home</a>
+            </li>
+            <li>
+              <a href={ROUTES.CATEGORIES}>Categories</a>
+            </li>
+            <li aria-current="page">{category.name}</li>
+          </ol>
+        </nav>
+
         <div className={styles.banner}>
           <span className={styles.eyebrow}>Handmade in Nepal</span>
-          <h1 className={styles.title}>Browse by Category</h1>
+          <h1 className={styles.title}>{category.name}</h1>
+          {category.description && (
+            <p className={styles.description}>{category.description}</p>
+          )}
         </div>
 
-        {categories.length === 0 ? (
-          <p className={styles.empty}>No categories available right now.</p>
-        ) : (
-          <div className={styles.grid}>
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
+        <div className={styles.toolbarWrap}>
+          <div className={styles.toolbar}>
+            <Suspense fallback={<span className={styles.skeletonTags}>Loading filters…</span>}>
+              <FilterSidebar
+                categories={allCategories}
+                selectedCategoryId={category.id}
+                minPrice={filters.minPrice || 0}
+                maxPrice={filters.maxPrice || 10000}
+                basePath={basePath}
+              />
+            </Suspense>
+            <Suspense fallback={<span className={styles.skeletonSort}>Loading…</span>}>
+              <SortDropdown currentSort={sort} basePath={basePath} />
+            </Suspense>
           </div>
+
+          <div className={styles.resultsBar}>
+            <span className={styles.resultCount}>
+              {meta.total > 0 ? (
+                <>
+                  Showing <strong>{((page - 1) * limit) + 1}</strong>–
+                  <strong>{Math.min(page * limit, meta.total)}</strong> of{" "}
+                  <strong>{meta.total}</strong> pieces
+                </>
+              ) : (
+                "No pieces found"
+              )}
+            </span>
+          </div>
+        </div>
+
+        {products.length === 0 ? (
+          <div className={styles.emptyWrapper}>
+            <EmptyState />
+          </div>
+        ) : (
+          <>
+            <ProductGrid products={products} />
+            <Pagination currentPage={page} totalPages={meta.totalPages} />
+          </>
         )}
       </div>
     </div>

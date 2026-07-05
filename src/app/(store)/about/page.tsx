@@ -1,10 +1,13 @@
+import type { Metadata } from "next";
 import { APP_NAME } from "@/constants";
+import { buildMetadata } from "@/lib/seo";
 import styles from "./page.module.css";
 
-export const metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "About Us",
-  description: `Learn the story behind ${APP_NAME}  handmade gifts crafted with care in Nepal.`,
-};
+  description: `Learn the story behind ${APP_NAME} — handmade gifts crafted with care in Nepal.`,
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

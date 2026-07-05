@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Suspense } from "react";
 import "@/styles/globals.css";
-import { APP_NAME, APP_TAGLINE } from "@/constants";
+import { APP_NAME, APP_TAGLINE, APP_URL } from "@/constants";
 import { GA_MEASUREMENT_ID } from "@/lib/gtag";
 import SessionProvider from "@/components/providers/SessionProvider";
 import ToastProvider from "@/components/providers/ToastProvider";
 import GAListener from "@/components/analytics/GAListener";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: {
     default: APP_NAME,
     template: `%s | ${APP_NAME}`,
@@ -17,12 +18,21 @@ export const metadata: Metadata = {
   keywords: ["handmade gifts", "gift shop", "Nepal", "Nimki", "handcrafted"],
   authors: [{ name: APP_NAME }],
   creator: APP_NAME,
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     type:        "website",
     locale:      "en_US",
-    url:         process.env.NEXT_PUBLIC_APP_URL,
+    url:         APP_URL,
     siteName:    APP_NAME,
     title:       APP_NAME,
+    description: APP_TAGLINE,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: APP_NAME,
     description: APP_TAGLINE,
   },
 };
@@ -39,7 +49,6 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
         />
-        <meta name="ga-debug" content={GA_MEASUREMENT_ID ?? "MISSING"} />
         {GA_MEASUREMENT_ID && (
           <>
             <Script

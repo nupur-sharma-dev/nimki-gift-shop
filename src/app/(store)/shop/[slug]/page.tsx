@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getProductBySlug, getRelatedProducts } from "@/services/product.service";
 import { canUserReviewProduct, getUserReviewForProduct } from "@/services/review.service";
 import { formatCurrency, calculateDiscount } from "@/utils";
+import { buildMetadata, buildProductJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo";
 import ProductGallery from "@/components/store/ProductGallery/ProductGallery";
 import AddToCartSection from "@/components/store/AddToCartSection/AddToCartSection";
 import ProductReviews from "@/components/store/ProductReviews/ProductReviews";
@@ -16,6 +18,18 @@ interface ProductPageProps {
   params: {
     slug: string;
   };
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const product = await getProductBySlug(params.slug);
+  if (!product) return {};
+
+  return buildMetadata({
+    title: product.name,
+    description: product.description ?? product.name,
+    path: ROUTES.PRODUCT(product.slug),
+    image: product.images?.[0],
+  });
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -32,19 +46,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const isLowStock = product.stock > 0 && product.stock <= 5;
   const isOutOfStock = product.stock === 0;
 
-  // Get related products
-  const relatedProducts = await getRelatedProducts(
-    product.id,
-    product.categoryId,
-    4
-  );
+  const relatedProducts = product.categoryId 
+    ? await getRelatedProducts(product.id, product.categoryId, 4)
+    : [];
 
-  // Get reviews with user info
   const reviews = product.reviews || [];
   const averageRating = product.averageRating || 0;
   const totalReviews = product.totalReviews || 0;
 
-  // Review eligibility + existing review for the current user (if logged in)
   const session = await getServerSession(authOptions);
   let canReview = false;
   let userReview = null;
@@ -58,8 +67,40 @@ export default async function ProductPage({ params }: ProductPageProps) {
     userReview = existing;
   }
 
+  const productJsonLd = buildProductJsonLd({
+    name: product.name,
+    description: product.description ?? "",
+    images: product.images,
+    price: product.price,
+    slug: product.slug,
+    averageRating,
+    totalReviews,
+    inStock: product.stock > 0,
+  });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", path: ROUTES.HOME },
+    {
+      name: product.category?.name ?? "Shop",
+      path: product.category ? ROUTES.CATEGORY(product.category.slug) : ROUTES.SHOP,
+    },
+    { name: product.name, path: ROUTES.PRODUCT(product.slug) },
+  ]);
+
   return (
     <div className={styles.page}>
+      {productJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        />
+      )}
+      {breadcrumbJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
+      )}
       <ViewItemTracker
         productId={product.id}
         productName={product.name}
@@ -67,7 +108,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         categoryName={product.category?.name}
       />
       <div className="container">
-        {/* Breadcrumbs */}
         <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
           <ol>
             <li>
@@ -82,7 +122,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </ol>
         </nav>
 
-        {/* Product Section */}
         <div className={styles.product}>
           <div className={styles.gallery}>
             <ProductGallery images={product.images} productName={product.name} />
@@ -143,12 +182,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <p className={styles.description}>{product.description}</p>
 
-            {!isOutOfStock && (<AddToCartSection productId={product.id} stock={product.stock} />
-            )}
+            {!isOutOfStock && <AddToCartSection productId={product.id} stock={product.stock} />}
           </div>
         </div>
 
-        {/* Reviews Section */}
         <section className={styles.reviewsSection}>
           <h2 className={styles.sectionTitle}>Customer Reviews</h2>
           <ProductReviews
@@ -161,7 +198,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           />
         </section>
 
-        {/* Related Products */}
         <RelatedProducts products={relatedProducts} />
       </div>
     </div>
