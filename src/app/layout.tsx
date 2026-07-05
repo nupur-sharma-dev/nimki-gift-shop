@@ -39,6 +39,7 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
         />
+        <meta name="ga-debug" content={GA_MEASUREMENT_ID ?? "MISSING"} />
         {GA_MEASUREMENT_ID && (
           <>
             <Script
