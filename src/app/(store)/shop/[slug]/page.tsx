@@ -10,6 +10,7 @@ import ProductReviews from "@/components/store/ProductReviews/ProductReviews";
 import RelatedProducts from "@/components/store/RelatedProducts/RelatedProducts";
 import { ROUTES } from "@/constants";
 import styles from "./page.module.css";
+import ViewItemTracker from "@/components/analytics/ViewItemTracker";
 
 interface ProductPageProps {
   params: {
@@ -59,6 +60,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className={styles.page}>
+      <ViewItemTracker
+        productId={product.id}
+        productName={product.name}
+        price={product.price}
+        categoryName={product.category?.name}
+      />
       <div className="container">
         {/* Breadcrumbs */}
         <nav className={styles.breadcrumbs} aria-label="Breadcrumb">

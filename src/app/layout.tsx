@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import { Suspense } from "react";
 import "@/styles/globals.css";
 import { APP_NAME, APP_TAGLINE } from "@/constants";
+import { GA_MEASUREMENT_ID } from "@/lib/gtag";
 import SessionProvider from "@/components/providers/SessionProvider";
 import ToastProvider from "@/components/providers/ToastProvider";
+import GAListener from "@/components/analytics/GAListener";
 
 export const metadata: Metadata = {
   title: {
@@ -35,8 +39,27 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
         />
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </head>
       <body>
+        <Suspense fallback={null}>
+          <GAListener />
+        </Suspense>
         <SessionProvider>
           {children}
           <ToastProvider />

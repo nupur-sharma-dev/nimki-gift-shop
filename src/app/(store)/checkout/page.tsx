@@ -5,6 +5,7 @@ import { getCart } from "@/services/cart.service";
 import { getAddresses } from "@/services/address.service";
 import { ROUTES } from "@/constants";
 import CheckoutForm from "@/components/store/CheckoutForm/CheckoutForm";
+import BeginCheckoutTracker from "@/components/analytics/BeginCheckoutTracker";
 import styles from "./page.module.css";
 
 export default async function CheckoutPage() {
@@ -19,6 +20,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className={styles.wrapper}>
+      <BeginCheckoutTracker items={cart.items} value={cart.subtotal} />
       <h1 className={styles.title}>Checkout</h1>
       <CheckoutForm cart={cart} addresses={addresses} />
     </div>

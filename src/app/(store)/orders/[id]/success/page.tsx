@@ -8,6 +8,7 @@ import { formatCurrency, formatDate } from "@/utils";
 import { PAYMENT_METHOD_LABELS, ROUTES } from "@/constants";
 import type { ShippingAddress } from "@/types";
 import styles from "./page.module.css";
+import PurchaseTracker from "@/components/analytics/PurchaseTracker";
 
 export default async function OrderSuccessPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -20,6 +21,18 @@ export default async function OrderSuccessPage({ params }: { params: { id: strin
 
   return (
     <div className={styles.wrapper}>
+      <PurchaseTracker
+        transactionId={order.orderNumber}
+        value={order.total}
+        shipping={order.shippingCost}
+        items={order.items.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          price: item.price,
+          quantity: item.quantity,
+        }))}
+      />
+
       <div className={styles.card}>
         <i className="bx bx-check-circle" />
         <h1>Thank you for your order!</h1>

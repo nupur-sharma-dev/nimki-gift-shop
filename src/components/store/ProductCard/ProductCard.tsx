@@ -5,6 +5,7 @@ import Image from "next/image";
 import { formatCurrency, calculateDiscount } from "@/utils";
 import { ROUTES } from "@/constants";
 import { useCart } from "@/context/CartContext";
+import { trackAddToCart } from "@/lib/gtag";
 import type { ProductCard } from "@/types";
 import styles from "./ProductCard.module.css";
 
@@ -29,6 +30,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     addItem(product.id, 1);
+    trackAddToCart({
+      item_id: product.id,
+      item_name: product.name,
+      item_category: product.category?.name,
+      price: product.price,
+      quantity: 1,
+    });
   };
 
   return (
